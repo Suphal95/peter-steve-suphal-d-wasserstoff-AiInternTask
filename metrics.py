@@ -14,7 +14,7 @@ def getActiveThreadCount():
     """
     try:
         activeCount = threading.active_count()
-        logging.info(f"Current active thread count: {activeCount}".)
+        logging.info(f"Current active thread count: {activeCount}.")
         return activeCount
     
     except Exception as e:
