@@ -1,9 +1,11 @@
 import os
 from parsing import processPdf, processUrl, processJson, processPdfsConcurrently
 from config import pdfFolderPath
+import logging
 import time
 
 def main():
+    logging.info(f"Pdf Processing Pipeline Started.")
     print("PDF Processing Pipeline")
     print("=======================")
     print("Choose an option")
@@ -19,50 +21,74 @@ def main():
         if choice == '1':
             ## option 1 process all pdfs in the folder
             folderPath = input(f"Enter the folder path (Default: pdfFolderPath): ") or pdfFolderPath
-            processPdfsConcurrently(folderPath)
-            print(f"Processing all pdfs in folder completed.")
+            logging.info(f"User selected to processing all pdfs in folder: {folderPath}.")
+
+            if os.path.isdir(folderPath):
+                processPdfsConcurrently(folderPath)
+                logging.info("Completed processing all PDFs in folder")
+                print(f"Processing all PDFs in folder completed.")
+            else:
+                logging.error(f"Invalid folder path: {folderPath}")
+                print(f"Invalid folder path: {folderPath}")
     
         elif choice == '2':
-            ## option 2 process a single pdf file
+            ## Option 2: Process a single PDF file
             filePath = input("Enter the path to PDF file: ")
+            logging.info(f"User selected to process single PDF file: {filePath}")
             
             if os.path.isfile(filePath) and filePath.lower().endswith(".pdf"):
                 processPdf(filePath)
+                logging.info(f"Completed processing single PDF: {filePath}")
                 print(f"\nProcessing single PDF completed.")
             else:
+                logging.error(f"Invalid PDF file path: {filePath}")
                 print(f"Invalid file path: {filePath}")
 
         elif choice == '3':
-            ## option 3 process pdf from url
+            ## Option 3: Process PDF from URL
             url = input("Enter the PDF URL: ")
+            logging.info(f"User selected to process PDF from URL: {url}")
+            
             if url.lower().startswith("http"):
                 processUrl(url)
+                logging.info(f"Completed processing PDF from URL: {url}")
                 print(f"Processing PDF from URL completed.")
             else:
+                logging.error(f"Invalid URL: {url}")
                 print(f"Invalid URL: {url}")
 
         elif choice == '4':
-            ## option 4 process a json file with pdf link or path
-            jsonFilePath = input(f"Enter the path to the Json file: ")
+            ## option 4 process a json file
+            jsonFilePath = input("Enter the path to the JSON file: ")
+            logging.info(f"User selected to process JSON file: {jsonFilePath}")
+            
             if os.path.isfile(jsonFilePath) and jsonFilePath.lower().endswith(".json"):
-             processJson(jsonFilePath)
-             print(f"Processing JSON file completed.")
+                processJson(jsonFilePath)
+                logging.info(f"Completed processing JSON file: {jsonFilePath}")
+                print(f"Processing JSON file completed.")
             else:
-                print(f"Invalid Json file: {jsonFilePath}")
+                logging.error(f"Invalid JSON file path: {jsonFilePath}")
+                print(f"Invalid JSON file: {jsonFilePath}")
     
         elif choice == '5':
-            print(f"Exiting the pipeline")
-    
+            logging.info("User chose to exit the pipeline")
+            print("Exiting the pipeline")
+            break
+        
         else:
-            print("invalid choice! Please enter a valid choice(1-5).")
+            logging.warning(f"User entered an invalid choice: {choice}")
+            print("Invalid choice! Please enter a valid choice (1-5).")
     
         ## prompt to restart or exit
-        restart = input("\n Do you want to process another set of files(y/n)? ").lower()
-        
+        restart = input("\nDo you want to process another set of files (y/n)? ").lower()
         if restart != 'y':
-            print("Pipeline execution Complted!")
+            logging.info("User chose to exit after processing")
+            print("Pipeline execution completed!")
             break
 
+    logging.info(f"PDF Processing Pipeline Ended.")
+
+    
     
 if __name__ == "__main__":
     main()
