@@ -232,7 +232,7 @@ def processUrl(url, download=False):
 
     ## log active thread after processing
     activeThreadCountEnd = getActiveThreadCount()
-    logging.info(f"Active thread count after processing URL {url} : {e} ")
+    logging.info(f"Active thread count after processing URL {url} : {activeThreadCountEnd} ")
 
 
 ## function to process json files that may contain file path or url
@@ -301,45 +301,31 @@ def processJson(filePath):
 
 
 ## function to process all pdfs in folder concurrently
-@trackExecutionTime
 def processPdfsConcurrently(folderPath):
     logging.info(f"Starting to process all PDFs in {folderPath}")
-    logResourceUsage() ## logging resource at the start
+    logResourceUsage()  # logging resource at the start
 
-    ## log active thread count
+    # log active thread count
     activeThreadCountStart = getActiveThreadCount()
     logging.info(f"Active thread count before processing {folderPath}: {activeThreadCountStart}")
 
-    ## list all PDFs in folder
+    # list all files in folder
     pdfFiles = [os.path.join(folderPath, file) for file in os.listdir(folderPath) if file.lower().endswith(".pdf")]
+    logging.info(f"Found {len(pdfFiles)} PDF(s) to process.")
 
-    if not pdfFiles:
-        logging.error(f"No PDFs found in {folderPath}")
-        return
-    
-    logging.info(f"Found {len(pdfFiles)} to process.")
-
-    ## use threapooler for concurrent processing
+    # use ThreadPoolExecutor for concurrent processing
     with ThreadPoolExecutor() as executor:
-        futures = {}
+        futures = {executor.submit(processPdf, filePath): filePath for filePath in pdfFiles}
 
-        ## submit each pdf file for processing and track futures with file paths
-        for filePath in pdfFiles:
-            filePath = futures[executor.submit(processPdf, filePath)]
-            logging.info(f"Scheduled processing for {filePath}")
-
-        ## wait for futures to complete and check for errors
-        for future in futures:
-            filePath = futures[future]
+        # wait for futures to complete and check for errors
+        for future in as_completed(futures):
+            filePath = futures[future]  # get the file path associated with this future
             try:
                 future.result()
-                logging.info(f"Successfully processed {filePath}")
-            
+                logging.info(f"Successfully processed PDF: {filePath}")
             except Exception as e:
-                logging.error(f"Error processing: {filePath}")
-    
-    ## active thread count after processing
-    activeThreadCountEnd = getActiveThreadCount()
-    logging.info(f"Active thread count after processing PDFs in {folderPath}: {activeThreadCountEnd}")
+                logging.error(f"Error processing PDF from {filePath}: {e}")
 
-    logging.info(f"Successfully processed all PDFs in {folderPath}")
+    # log active thread count after processing
+    activeThreadCountEnd = getActiveThreadCount()
+    logging.info(f"Active thread count after processing {folderPath}: {activeThreadCountEnd}")
